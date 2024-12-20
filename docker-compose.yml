@@ -1,0 +1,83 @@
+services:
+  hop:
+    image: apache/hop:latest
+    container_name: apache-hop_dw
+    working_dir: /data
+    volumes:
+      - hop-data:/data
+    environment:
+      - HOP_HOME=/data
+      - JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+    entrypoint: ["/bin/sh", "-c", "tail -f /dev/null"]
+    restart: always
+    networks:
+      - data_warehouse_net
+
+  hop-web:
+    image: apache/hop-web
+    container_name: apache-hop-web_dw
+    user: "0:0"
+    ports:
+      - "8080:8080"
+    environment:
+      - HOP_PROJECT_FOLDER=/project
+      - HOP_PROJECT_NAME=data_warehouse
+      - HOP_ENVIRONMENT_NAME=data_warehouse_env
+      - HOP_ENVIRONMENT_CONFIG_FILE_NAME_PATHS=/config/data_warehouse_env.json
+      - HOP_SHARED_JDBC_FOLDERS=/drivers
+    volumes:
+      - hop-web-data:/data
+      - ./project:/project
+      - ./environment:/config
+      - ./data:/project/shared-data
+      - ./drivers:/drivers
+    restart: always
+    networks:
+      - data_warehouse_net
+
+  mariadb:
+    image: mariadb:noble
+    container_name: mariadb_dw
+    ports:
+      - "13306:3306"
+    env_file:
+      - .env
+    volumes:
+      - mariadb-data:/var/lib/jdbc
+    restart: always
+    networks:
+      - data_warehouse_net
+
+  postgres-db:
+    image: postgres:17
+    container_name: postgres-dw
+    env_file:
+      - .env
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - data_warehouse_net
+
+  metabase:
+    image: metabase/metabase:v0.46.0
+    container_name: metabase_dw
+    ports:
+      - "3000:3000"
+    volumes:
+      - metabase-data:/metabase.db
+    restart: always
+    networks:
+      - data_warehouse_net
+
+volumes:
+  hop-data:
+  hop-web-data:
+  mariadb-data:
+  postgres-data:
+  metabase-data:
+
+networks:
+  data_warehouse_net:
