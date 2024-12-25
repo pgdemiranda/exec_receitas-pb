@@ -1,0 +1,31 @@
+{
+  "rdbms": {
+    "MARIADB": {
+      "databaseName": "producao",
+      "pluginId": "MARIADB",
+      "accessType": 0,
+      "hostname": "mariadb",
+      "password": "Encrypted 2be98afba05c886bbbb18bd63c99dbdde",
+      "pluginName": "MariaDB",
+      "port": "3306",
+      "driverClassName": "Mysql 8+",
+      "attributes": {
+        "SUPPORTS_TIMESTAMP_DATA_TYPE": "Y",
+        "STREAM_RESULTS": "N",
+        "EXTRA_OPTION_MARIADB.defaultFetchSize": "500",
+        "EXTRA_OPTION_MARIADB.zeroDateTimeBehaviorValue": "CONVERT_TO_NULL",
+        "FORCE_IDENTIFIERS_TO_LOWERCASE": "N",
+        "PRESERVE_RESERVED_WORD_CASE": "Y",
+        "FORCE_IDENTIFIERS_TO_UPPERCASE": "N",
+        "QUOTE_ALL_FIELDS": "N",
+        "SUPPORTS_BOOLEAN_DATA_TYPE": "Y",
+        "SQL_CONNECT": "",
+        "EXTRA_OPTION_MARIADB.useCursorFetch": "true",
+        "PREFERRED_SCHEMA_NAME": ""
+      },
+      "manualUrl": "",
+      "username": "root"
+    }
+  },
+  "name": "mariadb"
+}

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <pipeline>
   <info>
-    <name>2_carga_inicial_joins</name>
+    <name>1_carga_inicial_joins</name>
     <name_sync_with_filename>Y</name_sync_with_filename>
     <description/>
     <extended_description/>
@@ -469,7 +469,6 @@
       <schema_name/>
     </partitioning>
     <compress>N</compress>
-    <compress_variables/>
     <directory>${java.io.tmpdir}</directory>
     <fields>
       <field>
@@ -489,7 +488,6 @@
         <presorted>N</presorted>
       </field>
     </fields>
-    <free_memory/>
     <sort_prefix>out</sort_prefix>
     <sort_size>1000000</sort_size>
     <unique_rows>N</unique_rows>
@@ -518,14 +516,11 @@
     <only_when_have_rows>N</only_when_have_rows>
     <partitioning_daily>N</partitioning_daily>
     <partitioning_enabled>N</partitioning_enabled>
-    <partitioning_field/>
     <partitioning_monthly>Y</partitioning_monthly>
-    <return_field/>
     <return_keys>N</return_keys>
     <schema>producao</schema>
     <specify_fields>N</specify_fields>
     <table>receita_final</table>
-    <tablename_field/>
     <tablename_in_field>N</tablename_in_field>
     <tablename_in_table>Y</tablename_in_table>
     <truncate>N</truncate>
@@ -830,9 +825,6 @@
       </remove>
       <remove>
         <name>CODIGO_FONTE_RECURSO_1</name>
-      </remove>
-      <remove>
-        <name>NOME_FONTE_RECURSO</name>
       </remove>
     </fields>
     <attributes/>
