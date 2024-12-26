@@ -58,22 +58,61 @@ Buscamos os dados da Execução Orçamentária e enriquecemos esse conjunto com 
 
 ## 3.2. - Requerimentos em Python
 Os requerimentos estão disponibilizados no arquivo pyproject.toml e podem ser instalados com Poetry ou manualmente com um gerenciador de pacotes.
-python = "^3.12"
-pandas = "^2.2.3"
-requests = "^2.32.3"
+- python = "^3.12"
+- pandas = "^2.2.3"
+- requests = "^2.32.3"
 
 # 4.0. - Descrição do Projeto
 ## 4.1. Aquisição dos Dados
-Os dados foram adquiridos através de um script em Python escrito no arquivo main.py que itera realizando requisições e armazenam os dados em formato csv por ano e mês. 
-O arquivo main.py espera um input do usuário de quais anos quer obter os dados, entre os anos 2000 e 2024 (que são os dados disponibilizados, até o momento, no portal https://dados.pb.gov.br/). 
-O script faz o download, armazena e concatena conjuntos referentes a execução das receitas, as unidades gestoras e as fontes de recursos (e pula os anos e meses que já estão armazenados localmente), sendo gerados ao final desse processo três arquivos: receita_pb.csv, fonte_recurso_pb_final.csv e unidade_gestora_pb_final.csv.
+Os dados foram adquiridos através de um script em Python escrito no arquivo main.py que itera realizando requisições e armazenam os dados em formato csv por ano e mês. O arquivo main.py espera um input do usuário de quais anos quer obter os dados, entre os anos 2000 e 2024 (que são os dados disponibilizados, até o momento, no portal https://dados.pb.gov.br/). O script faz o download, armazena e concatena conjuntos referentes a execução das receitas, as unidades gestoras e as fontes de recursos (e pula os anos e meses que já estão armazenados localmente), sendo gerados ao final desse processo três arquivos: receita_pb.csv, fonte_recurso_pb_final.csv e unidade_gestora_pb_final.csv.
 
 ## 4.2. Carga inicial em Banco de Dados em Produção
-A carga inicial foi realizada com Apache Hop através de pipelines que podem ser encontrada em [1_carga_inicial.hpl](./data/1_carga_inicial.hpl), onde a carga é feita no schema producao e em tabelas diferentes (uma para cada csv) e em [1_carga_inicial.hpl](./data/2_carga_inicial_joins.hpl), onde a carga também é feita no schema producao mas já unidas em uma única tabela.
-O objetivo dessa etapa é simular o ambiente em produções sobre o qual iremos realizar a construção da camada analítica em um banco de dados separado com o objetivo não apenas de agilizar a análise, mas também no fornecimento dos dados.
+A carga inicial foi realizada com Apache Hop através de pipelines disponibilizadas em [1_carga_inicial.hpl](./data/1_carga_inicial.hpl), onde a carga é feita no schema producao e em tabelas diferentes (uma para cada csv), com o esquema disponível abaixo:
+
+<div align="center">
+    <img src="./img/img1.png" alt="Pipeline de Carga Inicial" width="600">
+</div>
+
+Bem como em [1_carga_inicial_joins.hpl](./data/1_carga_inicial_joins.hpl), onde a carga também é feita no schema producao com os dados disponibilizados em uma única tabela.
+
+<div align="center">
+    <img src="./img/img2.png" alt="Pipeline de Joins da Carga Inicial" width="600">
+</div>
+
+O objetivo dessa etapa é simular o ambiente em produção, aqui um banco de dados MariaDB, sobre o qual iremos realizar a construção da camada analítica em um banco de dados separado com o objetivo não apenas em agilizar a análise dos daos, mas também aliviar os custos no banco de dados em produção.
 
 ## 4.2. Construção das Tabelas Dimensão
+Nessa etapa os dados são obtidos do banco de dados em produção, isolados em tabelas dimensão e armazenados no banco de dados analítico, aqui um banco de dados PostgreSQL, que alimentará a ferramenta de BI onde estarão disponibilizados os paineis.
 
+### 4.2.1. Dimensão Fonte Recurso
+A tabela dimensão nomeada dim_fonte_recurso foi armazenada no schema dim_orcamento com as colunas codigo_fonte_recurso (a chave primária) e nome_fonte_recurso. A pipeline está disponível em [2_dim_fonte_recurso.hpl](./data/2_dim_fonte_recurso.hpl) e os passos necessários encontram-se abaixo:
+
+<div align="center">
+    <img src="./img/img3.png" alt="Pipeline da Tabela Dimensão Fonte Recurso" width="800">
+</div>
+
+### 4.2.2. Dimensão Unidade Gestora
+A tabela dimensão nomeada dim_unidade_gestora foi armazenada no schema dim_orcamento com as colunas codigo_unidade_gestora (a chave primária), sigla_unidade_gestora, nome_unidade_gestora e tipo_administracao_unidade_gestora. A pipeline está disponível em [2_dim_unidade_gestora.hpl](./data/2_dim_unidade_gestora.hpl) e os passos necessários encontram-se abaixo:
+
+<div align="center">
+    <img src="./img/img4.png" alt="Pipeline da Tabela Dimensão Unidade Gestora" width="800">
+</div>
+
+### 4.2.3. Dimensão Item Receita
+A tabela dimensão nomeada dim_item_receita foi armazenada no schema dim_orcamento com as colunas exercicio, mes, codigo_unidade_gestora, codigo_item_receita (a chave primária), nome_item_receita, codigo_fonte_recurso e valor_mes. A pipeline está disponível em [2_dim_item_receita.hpl](./data/2_dim_item_receita.hpl) e os passos necessários encontram-se abaixo:
+
+<div align="center">
+    <img src="./img/img5.png" alt="Pipeline da Tabela Dimensão Item Receita" width="800">
+</div>
+
+## 4.3. Construção da Tabela Fato
+As tabelas dimensão são unidas em uma nova camada analítica chamada fato representando cada uma das dimensões unidas em torno da execução de um item do orçamento do Estado da Paraíba por uma unidade gestora em determinado mês e ano. Uma coluna com a chave primária de cada uma dessas execuções foi criada como execucao_id e as colunas reunidas foram: exercicio, mes, codigo_unidade_gestora, sigla_unidade_gestora, nome_unidade_gestora, codigo_item_receita, nome_item_receita, codigo_fonte_recurso, nome_fonte_recurso e valor_mes. Os dados foram armazenados em um schema chamado fact_orcamento. A pipeline está disponível em [3_fato_execucao_orcamento.hpl](./data/3_fato_execucao_orcamento.hpl) e os passos necessários encontram-se abaixo:
+
+<div align="center">
+    <img src="./img/img6.png" alt="Pipeline da Tabela Fato Execução Orçamento" width="800">
+</div>
+
+## 4.4. Visualização dos Dados em Painéis
 
 # 5.0. Conclusão
 Também como objetivo, buscamos utilizar o maior número de ferramentas open-source possível, e obtivemos êxito em todas as etapas do projeto, da linguagem, dos bancos de dados, da ferramenta de ELT e da ferramenta de BI. Além disso conseguimos realizar os paineis contendo todas as informações da execução orçamentária do Estado da Paraíba dos anos 2000 à 2024. 
