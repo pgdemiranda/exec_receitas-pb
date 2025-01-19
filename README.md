@@ -61,23 +61,32 @@ Os requerimentos estão disponibilizados no arquivo [pyproject.toml](./pyproject
 - requests = "^2.32.3"
 
 ## 3.3. Como Reproduzir Esse Projeto
-1. Certifique-se de ter instalado Python na versão 3.12, e as bibliotecas apontadas no arquivo pyproject.toml. Rode o script [main.py](./main.py), aponte os inputs esperados no terminal.
+### ATENÇÃO, o repositório já contém todos os arquivos prontos, se você deseja recriar todo o processo aqui descrito, apague os conteúdos dos bancos de dados em produção (MariaDB) e do Data Warehouse (PostgreSQL), além do conteúdo do Metabase.
 
-2. Com Docker instalado, prepare todos a infraestrutura com o arquivo [docker-compose.yml](./docker-compose.yml). O arquivo foi elaborado com o objetivo de que os dados sejam retidos mesmo se os contêiners forem parados. O conteúdo da pasta de dados também serve como uma ponte entre os dados armazenados localmente, obtidos com o script em Python, e os arquivos das pipelines em .hpl, executados com Apache Hop.
+1. Certifique-se de ter instalado Python na versão 3.12, e as bibliotecas apontadas no arquivo pyproject.toml. Para isso, tenha Poetry instalado, e no repositório entre o comando via terminal `poetry install`. Rode o script [main.py](./main.py) com `poetry run python main.py` e aponte os inputs esperados no terminal.
 
-3. Tenha preparado também um arquivo .env separado com as variáveis para MariaDB e PostgreSQL:
+2. Com Docker instalado, prepare todos a infraestrutura com o arquivo [docker-compose.yml](./docker-compose.yml). O arquivo foi elaborado com o objetivo de que os dados sejam retidos mesmo se os contêiners forem parados. O conteúdo da pasta de dados também serve como uma ponte entre os dados armazenados localmente, obtidos com o script em Python, e os arquivos das pipelines em .hpl, executados com Apache Hop, armazenados na pasta shared-data.
 
-- MYSQL_ROOT_PASSWORD= *senha root do MariaDB*
-- MYSQL_USER= *usuário do MariaDB*
-- MYSQL_PASSWORD= *senha do usuário do MariaDB*
+3. Tenha preparado também um arquivo .env separado com as variáveis para MariaDB e PostgreSQL. Normalmente essas credenciais não devem ser compartilhadas, mas como estamos disponibilizando bancos de dados com o propósito de reproducibilidade isso não deve ser um problema:
 
-- POSTGRES_USER= *usuário do PostgreSQL*
-- POSTGRES_PASSWORD= *senha do PostgreSQL*
-- POSTGRES_DB= *banco de dados no PostgreSQL*
+- MYSQL_ROOT_PASSWORD=rootpassword123
+- MYSQL_USER=mariadb_user
+- MYSQL_PASSWORD=userpassword123
+- MYSQL_DATABASE=producao
 
-4. Abra o Apache Hop em http://localhost:8080/ui e configure as conexões com os bancos de dados. Os drivers apropriados se encontram na pasta [drivers](./drivers/) e preparamos o docker-compose.yml de forma que os drivers estejam disponíveis dentro do contêiner. Em seguida, execute as pipelines na ordem apresentada nos pontos 4.2, 4.3 e 4.4 da descrição do projeto.
+- POSTGRES_USER=postgres
+- POSTGRES_PASSWORD=postgress123
+- POSTGRES_DB=hop_db
 
-5. Abra o Metabase em http://localhost:3000/ para examinar o painel analítico.
+4. Abra o Apache Hop em http://localhost:8080/ui e na aba lateral, no botão **Metadata** procure a opção **Relational Database Connection** e configure as conexões com os bancos de dados (eles já devem estar configurados, mas caso não estejam devem ser preparados). Os drivers apropriados se encontram na pasta [drivers](./drivers/) e preparamos o docker-compose.yml de forma que os drivers estejam disponíveis dentro do contêiner. Em seguida, apague os schemas e as tabelas de ambos os bancos de dados. Execute as pipelines na ordem apresentada nos pontos 4.2, 4.3 e 4.4 da descrição do projeto da seguinte maneira:
+- Na parte superior procure as opções de Project e Environment, selecione data_warehouse para Project e data_warehouse_env para Environment
+- Na pipeline do ponto 4.2, acesse o último step em producao.receita_final, selecione o botão de SQL e execute a função para criar a tabela onde será inserida a informação.
+- No Data Warehouse (nosso banco Postgres) crie um schema chamado dim_orcamento.
+- Nas pipelines 2_dim_unidade_gestora, 2_dim_fonte_recurso e 2_dim_item_receita, também recrie as tabelas acessando a última step de cada pipeline e o botão SQL em cada uma delas. Rode as pipelines e aguarde o fim da execução.
+- No Data Warehouse crie um schema chamado fact_orcamento.
+- Na pipeline 3_fato_execucao_orcamento, recrie a tabela também acessando a última step e o botão SQL e em seguida rode a pipeline.
+
+5. Abra o Metabase em http://localhost:3000/ configure uma conta de acesso e a conexão com o Data Warehouse para examinar e modificar o painel analítico (no campo de host, indique o nome do serviço **postgres-db**).
 
 
 # 4.0. Descrição do Projeto
