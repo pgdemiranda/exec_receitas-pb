@@ -43,9 +43,13 @@ Buscamos os dados da Execução Orçamentária e enriquecemos esse conjunto com 
 | NOME_FONTE_RECURSO                  | Texto            |     150 | Denominação da Fonte de Recurso                               |
 
 # 3.0. Tecnologias Utilizadas e Instruções
+<div align='center'>
+    <img src="./img/workflow.png" alt="Workflow com Ferramental Utilizado">
+</div>
+
 ## 3.1. Ferramentas 
 - Poetry (Criação de ambiente virtual, controle de pacotes e bibliotecas)
-- Docker (Modularização das ferramentas)
+- Docker e Docker Compose (Modularização das ferramentas)
 - Python 3.12
     - Pandas (Manipulação de dados)
     - Requests (Requisições HTTP)
